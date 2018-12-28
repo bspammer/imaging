@@ -294,14 +294,24 @@ func Fill(img image.Image, width, height int, anchor Anchor, filter ResampleFilt
 
 	var tmp *image.NRGBA
 	if srcAspectRatio < minAspectRatio {
-		cropH := float64(srcW) * float64(minH) / float64(minW)
-		tmp = CropAnchor(img, srcW, int(math.Max(1, cropH)+0.5), anchor)
+		tmpH := float64(srcW) * float64(minH) / float64(minW)
+		cropH := int(math.Max(1, tmpH) + 0.5)
+		if cropH%2 != srcH%2 {
+			cropH += 1
+		}
+		tmp = CropAnchor(img, srcW, cropH, anchor)
+		tmp = Resize(tmp, minW, 0, filter)
 	} else {
-		cropW := float64(srcH) * float64(minW) / float64(minH)
-		tmp = CropAnchor(img, int(math.Max(1, cropW)+0.5), srcH, anchor)
+		tmpW := float64(srcH) * float64(minW) / float64(minH)
+		cropW := int(math.Max(1, tmpW) + 0.5)
+		if cropW%2 != srcW%2 {
+			cropW += 1
+		}
+		tmp = CropAnchor(img, cropW, srcH, anchor)
+		tmp = Resize(tmp, 0, minH, filter)
 	}
 
-	return Resize(tmp, minW, minH, filter)
+	return CropAnchor(tmp, minW, minH, anchor)
 }
 
 // Thumbnail scales the image up or down using the specified resample filter, crops it
